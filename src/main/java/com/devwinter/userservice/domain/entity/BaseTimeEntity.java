@@ -1,4 +1,4 @@
-package com.devwinter.userservice.domain;
+package com.devwinter.userservice.domain.entity;
 
 import lombok.Getter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
