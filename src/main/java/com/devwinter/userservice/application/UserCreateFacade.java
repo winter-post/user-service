@@ -2,6 +2,7 @@ package com.devwinter.userservice.application;
 
 import com.devwinter.userservice.domain.service.UserCommandService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -9,9 +10,11 @@ import org.springframework.stereotype.Service;
 public class UserCreateFacade {
 
     private final UserCommandService userCommandService;
+    private final PasswordEncoder passwordEncoder;
 
     public Long createMember(UserCreateCommand command) {
-        return userCommandService.createMember(command.email, command.pass);
+        String encryptPassword = passwordEncoder.encode(command.pass);
+        return userCommandService.createMember(command.email, encryptPassword);
     }
 
     public record UserCreateCommand(
