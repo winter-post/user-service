@@ -1,6 +1,6 @@
 package com.devwinter.userservice.presentation.dto;
 
-import com.devwinter.userservice.application.UserCreateFacade;
+import com.devwinter.userservice.application.CreateUserFacade;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,8 +25,8 @@ public class CreateUser {
         @NotBlank(message = "비밀번호는 필수 값 입니다.")
         private String password;
 
-        public UserCreateFacade.UserCreateCommand convert() {
-            return new UserCreateFacade.UserCreateCommand(email, password);
+        public CreateUserFacade.UserCreateCommand convert() {
+            return new CreateUserFacade.UserCreateCommand(email, password);
         }
     }
 
