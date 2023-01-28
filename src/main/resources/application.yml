@@ -1,6 +1,7 @@
 server:
   port: 0
 
+
 spring:
   h2:
     console:
@@ -17,6 +18,9 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
   application:
     name: user-service
 

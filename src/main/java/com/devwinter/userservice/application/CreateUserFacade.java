@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserCreateFacade {
+public class CreateUserFacade {
 
     private final UserCommandService userCommandService;
     private final PasswordEncoder passwordEncoder;
