@@ -1,6 +1,9 @@
 package com.devwinter.userservice.presentation;
 
-import com.devwinter.userservice.application.UserCreateFacade;
+import com.devwinter.userservice.application.CreateUserFacade;
+import com.devwinter.userservice.application.GetUserInfoFacade;
+import com.devwinter.userservice.domain.dto.UserInfoDto;
+import com.devwinter.userservice.domain.entity.User;
 import com.devwinter.userservice.presentation.dto.CreateUser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.devwinter.userservice.presentation.exceptionhandler.GlobalExceptionHandler.ARGUMENT_NOT_VALID_STRING;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,11 +34,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserApiControllerTest {
     @Autowired
     protected MockMvc mockMvc;
-
     @Autowired
     protected ObjectMapper objectMapper;
     @MockBean
-    private UserCreateFacade userCreateFacade;
+    private CreateUserFacade createUserFacade;
+    @MockBean
+    private GetUserInfoFacade getUserInfoFacade;
 
     private static String USER_API_BASE_URL = "/api/v1/users";
 
@@ -42,8 +48,8 @@ class UserApiControllerTest {
     @DisplayName("회원 가입 시 이메일 빈값인 경우 유효성 검사 테스트")
     void createUserEmailEmptyValidAPITest(String emptyEmailParam) throws Exception {
         // given
-        String json = getJson(CreateUserMother.customEmail(emptyEmailParam)
-                                              .build());
+        String json = createUserJson(CreateUserMother.customEmail(emptyEmailParam)
+                                                     .build());
 
         // when & then
         mockMvc.perform(post(USER_API_BASE_URL)
@@ -61,8 +67,8 @@ class UserApiControllerTest {
     void createUserEmailMaxLengthOverAPITest() throws Exception {
         // given
         String emailMaxOverParam = "abcdejfkaisjkalsdlkfasd@gamil.com";
-        String json = getJson(CreateUserMother.customEmail(emailMaxOverParam)
-                                              .build());
+        String json = createUserJson(CreateUserMother.customEmail(emailMaxOverParam)
+                                                     .build());
 
         // when & then
         mockMvc.perform(post(USER_API_BASE_URL)
@@ -80,8 +86,8 @@ class UserApiControllerTest {
     @DisplayName("회원 가입 시 이메일 형식이 맞지 않은 경우 테스트")
     void createUserEmailNotFormatAPITest(String emailNotFormatParam) throws Exception {
         // given
-        String json = getJson(CreateUserMother.customEmail(emailNotFormatParam)
-                                              .build());
+        String json = createUserJson(CreateUserMother.customEmail(emailNotFormatParam)
+                                                     .build());
 
         // when & then
         mockMvc.perform(post(USER_API_BASE_URL)
@@ -99,8 +105,8 @@ class UserApiControllerTest {
     @DisplayName("회원 가입 시 비밀번호가 빈값인 경우 유효성 검사 테스트")
     void createUserPasswordEmptyValidAPITest(String emptyPasswordParam) throws Exception {
         // given
-        String json = getJson(CreateUserMother.customPassword(emptyPasswordParam)
-                                              .build());
+        String json = createUserJson(CreateUserMother.customPassword(emptyPasswordParam)
+                                                     .build());
 
         // when & then
         mockMvc.perform(post(USER_API_BASE_URL)
@@ -113,10 +119,6 @@ class UserApiControllerTest {
                .andDo(print());
     }
 
-    private String getJson(CreateUser.Request request) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(request);
-    }
-
     @Test
     @DisplayName("회원 가입 API 테스트")
     void createUserAPITest() throws Exception {
@@ -125,7 +127,7 @@ class UserApiControllerTest {
                                                      .build();
         String json = objectMapper.writeValueAsString(request);
 
-        given(userCreateFacade.createMember(any()))
+        given(createUserFacade.createMember(any()))
                 .willReturn(1L);
 
         // when
@@ -139,6 +141,41 @@ class UserApiControllerTest {
                .andDo(print());
 
         // then
+    }
+
+    @Test
+    @DisplayName("회원 조회 API 테스트")
+    void getUserInfoAPITest() throws Exception {
+        // given
+        UserInfoDto userInfoDto = UserInfoDto.of(UserMother.complete()
+                                                           .build());
+        given(getUserInfoFacade.getUserInfo(anyLong()))
+                .willReturn(userInfoDto);
+
+
+        // when & then
+        mockMvc.perform(get(USER_API_BASE_URL + "/1")
+                       .contentType(MediaType.APPLICATION_JSON))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.code").value(HttpStatus.OK.toString()))
+               .andExpect(jsonPath("$.message").value("회원 조회에 성공하였습니다."))
+               .andExpect(jsonPath("$.body.email").value(UserMother.DEFAULT_TEST_EAMIL))
+               .andDo(print());
+    }
+
+    private String createUserJson(CreateUser.Request request) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(request);
+    }
+
+    static class UserMother {
+        private static String DEFAULT_TEST_EAMIL = "test@gmail.com";
+        private static String DEFAULT_TEST_PASSWORD = "test1234";
+
+        public static User.UserBuilder complete() {
+            return User.builder()
+                       .email(DEFAULT_TEST_EAMIL)
+                       .password(DEFAULT_TEST_PASSWORD);
+        }
     }
 
     static class CreateUserMother {
@@ -167,4 +204,5 @@ class UserApiControllerTest {
                                      .password(password);
         }
     }
+
 }
